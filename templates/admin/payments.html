@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Management - Admin{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="fas fa-credit-card"></i> Payment Management
+</h2>
+
+<!-- Payment Overview -->
+<div class="row mb-4">
+    <div class="col-md-2-4">
+        <div class="stat-card">
+            <div class="stat-icon text-info">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-number">{{ "{:,.0f}".format(stats.total_fines|default(0)) }} KHR</div>
+            <div class="stat-label">Total Fines</div>
+        </div>
+    </div>
+    <div class="col-md-2-4">
+        <div class="stat-card">
+            <div class="stat-icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number">{{ "{:,.0f}".format(stats.collected|default(0)) }} KHR</div>
+            <div class="stat-label">Collected</div>
+        </div>
+    </div>
+    <div class="col-md-2-4">
+        <div class="stat-card">
+            <div class="stat-icon text-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-number">{{ "{:,.0f}".format(stats.outstanding|default(0)) }} KHR</div>
+            <div class="stat-label">Outstanding</div>
+        </div>
+    </div>
+    <div class="col-md-2-4">
+        <div class="stat-card">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="stat-number">{{ stats.unpaid_violations or 0 }}</div>
+            <div class="stat-label">Unpaid Count</div>
+        </div>
+    </div>
+    <div class="col-md-2-4">
+        <div class="stat-card">
+            <div class="stat-icon text-primary">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-number">{{ stats.pending_violations or 0 }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-table"></i> All Payments</span>
+        <button class="btn btn-sm btn-success" id="exportBtn">
+            <i class="fas fa-download"></i> Export
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Driver</th>
+                        <th>License</th>
+                        <th>Plate</th>
+                        <th>Officer</th>
+                        <th>Vehicle</th>
+                        <th>Fine</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if violations %}
+                    {% for v in violations %}
+                    <tr>
+                        <td>#{{ v['id'] }}</td>
+                        <td>{{ v['driver_name'] or 'N/A' }}</td>
+                        <td><small>{{ v['license_number'] or '-' }}</small></td>
+                        <td><code>{{ v['plate_number'] or '-' }}</code></td>
+                        <td>{{ v['officer_name'] or '-' }}</td>
+                        <td>{{ v['vehicle_type'] }}</td>
+                        <td><strong>{{ "{:,.0f}".format(v['total_fine']|default(0)) }} KHR</strong></td>
+                        <td>
+                            <span
+                                class="badge bg-{% if v['payment_status'] == 'paid' %}success{% elif v['payment_status'] == 'unpaid' %}danger{% elif v['payment_status'] == 'pending' %}warning{% else %}info{% endif %}">
+                                {{ v['payment_status'] | upper }}
+                            </span>
+                        </td>
+                        <td>{{ v['payment_date'][:10] if v['payment_date'] else '-' }}</td>
+                        <td>
+                            <select class="form-select form-select-sm"
+                                onchange="updateAdminPayment({{ v['id'] }}, this.value)">
+                                <option value="">Change Status</option>
+                                <option value="paid">Mark Paid</option>
+                                <option value="unpaid">Mark Unpaid</option>
+                                <option value="pending">Mark Pending</option>
+                                <option value="overdue">Mark Overdue</option>
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">No payments found</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateAdminPayment(violationId, status) {
+        if (!status) return;
+
+        fetch(`/admin/update-payment/${violationId}/${status}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
+{% endblock %}

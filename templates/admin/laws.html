@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Traffic Laws Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Traffic Laws Management</h2>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLawModal">
+                <i class="fas fa-plus"></i> Add Law
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>Fine Amount</th>
+                        <th>Category</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for law in laws %}
+                    <tr>
+                        <td><strong>{{ law.law_code }}</strong></td>
+                        <td>{{ law.description }}</td>
+                        <td>{{ "{:,}".format(law.fine_amount) }} KHR</td>
+                        <td>{{ law.category }}</td>
+                        <td>
+                            {% if law.severity == 'Minor' %}
+                                <span class="badge bg-info">Minor</span>
+                            {% elif law.severity == 'Moderate' %}
+                                <span class="badge bg-warning">Moderate</span>
+                            {% else %}
+                                <span class="badge bg-danger">Severe</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if law.active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="editLaw({{ law.id }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteLaw({{ law.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">No traffic laws found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Law Modal -->
+<div class="modal fade" id="addLawModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Traffic Law</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addLawForm">
+                    <div class="mb-3">
+                        <label for="law_code" class="form-label">Law Code</label>
+                        <input type="text" class="form-control" id="law_code" name="law_code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fine_amount" class="form-label">Fine Amount (KHR)</label>
+                        <input type="number" class="form-control" id="fine_amount" name="fine_amount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-control" id="category" name="category" required>
+                            <option value="safety">Safety</option>
+                            <option value="license">License</option>
+                            <option value="speed">Speed</option>
+                            <option value="traffic_signal">Traffic Signal</option>
+                            <option value="distraction">Distraction</option>
+                            <option value="dui">DUI</option>
+                            <option value="documentation">Documentation</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="severity" class="form-label">Severity</label>
+                        <select class="form-control" id="severity" name="severity" required>
+                            <option value="Minor">Minor</option>
+                            <option value="Moderate">Moderate</option>
+                            <option value="Severe">Severe</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddLaw()">Add Law</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Law Modal -->
+<div class="modal fade" id="editLawModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Traffic Law</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editLawForm">
+                    <input type="hidden" id="edit_law_id">
+                    <div class="mb-3">
+                        <label for="edit_law_code" class="form-label">Law Code</label>
+                        <input type="text" class="form-control" id="edit_law_code" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_fine_amount" class="form-label">Fine Amount (KHR)</label>
+                        <input type="number" class="form-control" id="edit_fine_amount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_category" class="form-label">Category</label>
+                        <select class="form-control" id="edit_category" required>
+                            <option value="safety">Safety</option>
+                            <option value="license">License</option>
+                            <option value="speed">Speed</option>
+                            <option value="traffic_signal">Traffic Signal</option>
+                            <option value="distraction">Distraction</option>
+                            <option value="dui">DUI</option>
+                            <option value="documentation">Documentation</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_severity" class="form-label">Severity</label>
+                        <select class="form-control" id="edit_severity" required>
+                            <option value="Minor">Minor</option>
+                            <option value="Moderate">Moderate</option>
+                            <option value="Severe">Severe</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitEditLaw()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<script>
+function editLaw(lawId) {
+    fetch(`/admin/laws/edit/${lawId}`)
+        .then(res => res.json())
+        .then(law => {
+            document.getElementById('edit_law_id').value = law.id;
+            document.getElementById('edit_law_code').value = law.law_code;
+            document.getElementById('edit_description').value = law.description;
+            document.getElementById('edit_fine_amount').value = law.fine_amount;
+            document.getElementById('edit_category').value = law.category;
+            document.getElementById('edit_severity').value = law.severity;
+            new bootstrap.Modal(document.getElementById('editLawModal')).show();
+        })
+        .catch(err => alert('Error loading law: ' + err));
+}
+
+function submitEditLaw() {
+    const lawId = document.getElementById('edit_law_id').value;
+    const data = {
+        description: document.getElementById('edit_description').value,
+        fine_amount: parseInt(document.getElementById('edit_fine_amount').value),
+        category: document.getElementById('edit_category').value,
+        severity: document.getElementById('edit_severity').value
+    };
+    
+    fetch(`/admin/laws/edit/${lawId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            alert('Law updated successfully!');
+            location.reload();
+        }
+    })
+    .catch(err => alert('Error updating law: ' + err));
+}
+
+function deleteLaw(lawId) {
+    if (confirm('Are you sure you want to delete this law?')) {
+        fetch(`/admin/laws/delete/${lawId}`, {
+            method: 'DELETE'
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('Law deleted successfully!');
+                location.reload();
+            }
+        })
+        .catch(err => alert('Error deleting law: ' + err));
+    }
+}
+
+function submitAddLaw() {
+    const data = {
+        law_code: document.getElementById('law_code').value,
+        description: document.getElementById('description').value,
+        fine_amount: parseInt(document.getElementById('fine_amount').value),
+        category: document.getElementById('category').value,
+        severity: document.getElementById('severity').value
+    };
+    
+    fetch('/admin/laws/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            alert('Law added successfully!');
+            location.reload();
+        }
+    })
+    .catch(err => alert('Error adding law: ' + err));
+}
+</script>

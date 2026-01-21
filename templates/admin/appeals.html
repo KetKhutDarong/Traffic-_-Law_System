@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Violation Appeals{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Violation Appeals</h2>
+    
+    <div class="card mt-4">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Fine Amount</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appeal in appeals %}
+                    <tr>
+                        <td>#{{ appeal.id }}</td>
+                        <td>{{ appeal.username }}</td>
+                        <td>{{ "{:,}".format(appeal.total_fine) }} KHR</td>
+                        <td>{{ appeal.reason[:50] }}...</td>
+                        <td>
+                            {% if appeal.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif appeal.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ appeal.created_at }}</td>
+                        <td>
+                            {% if appeal.status == 'pending' %}
+                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#reviewModal{{ appeal.id }}">
+                                <i class="fas fa-check"></i> Review
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">No appeals found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Review Appeal Modals -->
+{% for appeal in appeals %}
+<div class="modal fade" id="reviewModal{{ appeal.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Review Appeal #{{ appeal.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>User:</strong> {{ appeal.username }}</p>
+                <p><strong>Reason:</strong></p>
+                <p>{{ appeal.reason }}</p>
+                <form id="reviewForm{{ appeal.id }}">
+                    <div class="mb-3">
+                        <label for="response" class="form-label">Officer Response</label>
+                        <textarea class="form-control" name="response" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="approveAppeal({{ appeal.id }})">Approve</button>
+                <button type="button" class="btn btn-danger" onclick="rejectAppeal({{ appeal.id }})">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Add JavaScript functions for approve/reject -->
+<script>
+function approveAppeal(appealId) {
+    const response = document.querySelector(`#reviewForm${appealId} textarea[name="response"]`).value;
+    
+    if (!response) {
+        alert('Please enter a response');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('response', response);
+    
+    fetch(`/admin/appeals/${appealId}/approve`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Appeal approved!');
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(err => alert('Error: ' + err));
+}
+
+function rejectAppeal(appealId) {
+    const response = document.querySelector(`#reviewForm${appealId} textarea[name="response"]`).value;
+    
+    if (!response) {
+        alert('Please enter a response');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('response', response);
+    
+    fetch(`/admin/appeals/${appealId}/reject`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Appeal rejected!');
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(err => alert('Error: ' + err));
+}
+</script>
+{% endblock %}

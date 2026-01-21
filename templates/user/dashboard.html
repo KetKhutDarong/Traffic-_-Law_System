@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard - Traffic Law Expert{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="fas fa-tachometer-alt"></i> My Dashboard
+</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-number">{{ total_violations }}</div>
+            <div class="stat-label">Total Violations</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-danger">
+                <i class="fas fa-money-bill"></i>
+            </div>
+            <div class="stat-number">{{ unpaid_fines | default(0) }}</div>
+            <div class="stat-label">Unpaid Fines</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-info">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="stat-number">{{ appeals | length }}</div>
+            <div class="stat-label">Appeals Filed</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number">0</div>
+            <div class="stat-label">Resolved</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-history"></i> Violation History
+            </div>
+            <div class="card-body">
+                {% if violations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Violations</th>
+                                <th>Fine</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in violations %}
+                            <tr>
+                                <td>{{ v.created_at[:10] }}</td>
+                                <td>
+                                    {% if v.violations %}
+                                    {{ v.violations[:50] }}...
+                                    {% else %}
+                                    No violations
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ v.total_fine|default(0)|int|format_number }} KHR</strong></td>
+                                <td>
+                                    <span
+                                        class="badge bg-{{ 'warning' if v.payment_status == 'unpaid' else 'success' }}">
+                                        {{ v.payment_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                        data-bs-target="#detailsModal{{ v.id }}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                        data-bs-target="#appealModal{{ v.id }}">
+                                        <i class="fas fa-file-alt"></i> Appeal
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-4">No violations recorded. Keep driving safely!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-car"></i> Check Violations
+            </div>
+            <div class="card-body">
+                <form id="checkForm">
+                    <div class="mb-2">
+                        <label class="form-label">Vehicle Type</label>
+                        <select class="form-select" name="vehicle" required>
+                            <option>Select Vehicle</option>
+                            <option value="motorcycle">Motorcycle</option>
+                            <option value="car">Car</option>
+                            <option value="truck">Truck</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Wearing Helmet?</label>
+                        <select class="form-select" name="helmet" required>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Speed (km/h)</label>
+                        <input type="number" class="form-control" name="speed" value="30" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Valid License?</label>
+                        <select class="form-select" name="license" required>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Vehicle Registered?</label>
+                        <select class="form-select" name="registration" required>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Running Red Light?</label>
+                        <select class="form-select" name="red_light" required>
+                            <option value="no">No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Using Phone?</label>
+                        <select class="form-select" name="phone" required>
+                            <option value="no">No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Consumed Alcohol?</label>
+                        <select class="form-select" name="alcohol" required>
+                            <option value="no">No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Check Violations
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="resultCard" class="card mt-3" style="display:none;">
+            <div class="card-header" id="resultHeader"></div>
+            <div class="card-body" id="resultBody"></div>
+        </div>
+    </div>
+</div>
+
+{% for v in violations %}
+<!-- View Details Modal -->
+<div class="modal fade" id="detailsModal{{ v.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Violation Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Date:</strong> {{ v.created_at }}</p>
+                <p><strong>Vehicle Type:</strong> {{ v.vehicle_type }}</p>
+                <p><strong>Speed:</strong> {{ v.speed }} km/h</p>
+                <p><strong>Violations:</strong></p>
+                <ul>
+                    {% if v.violations %}
+                    {% for violation in v.violations.split(',') %}
+                    <li>{{ violation.strip() }}</li>
+                    {% endfor %}
+                    {% else %}
+                    <li>No violations recorded</li>
+                    {% endif %}
+                </ul>
+                <p><strong>Fine Amount:</strong> <span class="text-danger">{{ v.total_fine|default(0)|int|format_number
+                        }} KHR</span>
+                </p>
+                <p><strong>Payment Status:</strong>
+                    <span class="badge bg-{{ 'warning' if v.payment_status == 'unpaid' else 'success' }}">
+                        {{ v.payment_status }}
+                    </span>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Appeal Modal -->
+<div class="modal fade" id="appealModal{{ v.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Appeal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Violation:</strong> {{ v.violations[:50] }}...</p>
+                <p><strong>Fine Amount:</strong> <span class="text-danger">${{ v.total_fine }}</span></p>
+                <form id="appealForm{{ v.id }}">
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Appeal Reason</label>
+                        <textarea class="form-control" name="reason" rows="4"
+                            placeholder="Explain why you believe this violation is incorrect..." required
+                            minlength="10"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAppeal({{ v.id }})">Submit Appeal</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    document.getElementById('checkForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(document.getElementById('checkForm'));
+        const data = Object.fromEntries(formData);
+
+        try {
+            const response = await fetch('/user/check-violation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            displayResult(result);
+        } catch (error) {
+            alert('Error: ' + error);
+        }
+    });
+
+    function displayResult(result) {
+        const card = document.getElementById('resultCard');
+        const header = document.getElementById('resultHeader');
+        const body = document.getElementById('resultBody');
+
+        if (result.status === 'legal') {
+            header.innerHTML = '<i class="fas fa-check-circle"></i> No Violations';
+            header.parentElement.style.background = '#28a745';
+            body.innerHTML = '<p class="text-success"><strong>Great!</strong> ' + result.message + '</p>';
+        } else {
+            header.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Violations Found';
+            header.parentElement.style.background = '#dc3545';
+            let html = '<p class="text-danger"><strong>' + result.message + '</strong></p>';
+            html += '<p><strong>Violations:</strong><ul>';
+            result.violations.forEach(v => html += '<li>' + v + '</li>');
+            html += '</ul></p>';
+            html += '<p><strong class="text-danger">Total Fine: $' + result.fine + '</strong></p>';
+            html += '<p><strong>Safety Tips:</strong><ul>';
+            result.advice.forEach(a => html += '<li>' + a + '</li>');
+            html += '</ul></p>';
+            body.innerHTML = html;
+        }
+
+        card.style.display = 'block';
+    }
+
+    function submitAppeal(violationId) {
+        const reason = document.querySelector(`#appealForm${violationId} textarea[name="reason"]`).value;
+
+        if (!reason || reason.length < 10) {
+            alert('Please enter at least 10 characters for your appeal reason');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('reason', reason);
+
+        fetch(`/user/appeals/${violationId}`, {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Appeal submitted successfully!');
+                    bootstrap.Modal.getInstance(document.querySelector(`#appealModal${violationId}`)).hide();
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+</script>
+{% endblock %}

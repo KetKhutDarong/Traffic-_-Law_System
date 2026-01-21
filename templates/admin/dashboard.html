@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Traffic Law Expert{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="fas fa-user-shield"></i> Admin Dashboard
+</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-info">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_violations }}</div>
+            <div class="stat-label">Total Violations</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-success">
+                <i class="fas fa-money-bill"></i>
+            </div>
+            <div class="stat-number">{{ "{:,.0f}".format(stats.total_collected|default(0)) }} KHR</div>
+            <div class="stat-label">Collected Fines</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_users }}</div>
+            <div class="stat-label">Registered Users</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="stat-number">{{ stats.pending_appeals }}</div>
+            <div class="stat-label">Pending Appeals</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-history"></i> Recent Activity
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <!-- In dashboard.html, update the table header and body: -->
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Driver</th> <!-- Changed from "User" to "Driver" -->
+                                <th>Vehicle</th>
+                                <th>Fine</th>
+                                <th>Status</th>
+                                <th>Officer</th> <!-- Added Officer column -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_activity %}
+                            <tr>
+                                <td>{{ record['created_at'][:10] }}</td>
+                                <td>
+                                    {{ record['driver_name'] or 'Unknown' }}
+                                    {% if record['officer_username'] %}
+                                    <br><small class="text-muted">by {{ record['officer_username'] }} ({{
+                                        record['badge_number'] or 'No
+                                        badge' }})</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ (record['vehicle_type'] or 'N/A')[:30] }}...</td>
+                                <td><strong>{{ "{:,.0f}".format(record['total_fine']|default(0)) }} KHR</strong></td>
+                                <td>
+                                    <span
+                                        class="badge bg-{{ 'success' if record['status'] == 'approved' else 'warning' }}">
+                                        {{ record['status'] }}
+                                    </span>
+                                </td>
+                                <td>{{ record['officer_username'] or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-pie"></i> System Overview
+            </div>
+            <div class="card-body">
+                <canvas id="severityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-cogs"></i> Management
+            </div>
+            <div class="card-body">
+                <a href="/admin/users" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                    <i class="fas fa-users"></i> Manage Users
+                </a>
+                <a href="/admin/officers" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                    <i class="fas fa-badge"></i> Manage Officers
+                </a>
+                <a href="/admin/laws" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                    <i class="fas fa-book"></i> Traffic Laws
+                </a>
+                <a href="/admin/appeals" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                    <i class="fas fa-clipboard-check"></i> Appeals
+                </a>
+                <a href="/admin/payments" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-chart-line"></i> Payments
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('severityChart').getContext('2d');
+    const severityStats = {{ severity_stats | tojson }};
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: severityStats.map(s => s.vehicle_type),
+            datasets: [{
+                data: severityStats.map(s => s.count),
+                backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

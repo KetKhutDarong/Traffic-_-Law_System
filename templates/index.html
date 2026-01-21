@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Cambodia Traffic Law Expert System{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4">
+            <i class="fas fa-car-crash text-danger"></i> Cambodia Road Traffic Law Expert
+        </h1>
+        <p class="lead mb-4 text-muted">
+            Get instant guidance on Cambodia traffic violations, fines, and regulations. Our intelligent system helps drivers, officers, and administrators manage traffic law compliance efficiently.
+        </p>
+        <div class="d-flex gap-3">
+            {% if not session.user_id %}
+                <a href="/login" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="/register" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            {% else %}
+                {% if session.role == 'admin' %}
+                    <a href="/admin/dashboard" class="btn btn-primary btn-lg">
+                        <i class="fas fa-chart-line"></i> Admin Dashboard
+                    </a>
+                {% elif session.role == 'officer' %}
+                    <a href="/officer/dashboard" class="btn btn-primary btn-lg">
+                        <i class="fas fa-badge"></i> Officer Dashboard
+                    </a>
+                {% else %}
+                    <a href="/user/dashboard" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt"></i> My Dashboard
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <img src="https://github.com/KetKhutDarong/ImageTrafficlaw/blob/main/Gemini_Generated_Image_nko40znko40znko4.png?raw=true" 
+             alt="Traffic" class="img-fluid rounded-3" style="box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+    </div>
+</div>
+
+<hr class="my-5">
+
+<h2 class="text-center mb-5 fw-bold">Key Features</h2>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon text-primary">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Expert System</h5>
+            <p class="text-muted">Intelligent violation detection based on Cambodia traffic law database</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon text-info">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Role-Based Access</h5>
+            <p class="text-muted">Customized interfaces for drivers, officers, and administrators</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon text-success">
+                <i class="fas fa-database"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Real-Time Tracking</h5>
+            <p class="text-muted">Complete violation history, fines, and payment status management</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon text-warning">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Analytics Dashboard</h5>
+            <p class="text-muted">Comprehensive reports and violation statistics by vehicle type and category</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon text-danger">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Appeal System</h5>
+            <p class="text-muted">Users can appeal violations with admin review and approval process</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon text-secondary">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Secure & Reliable</h5>
+            <p class="text-muted">Enterprise-grade security with encrypted data and role-based permissions</p>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5">
+
+<h2 class="text-center mb-5 fw-bold">How It Works</h2>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="display-6 text-primary mb-3">
+                            <i class="fas fa-number-1"></i>
+                        </div>
+                        <h5 class="fw-bold">Register & Login</h5>
+                        <p class="text-muted small">Create an account and log in to access the system based on your role</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="display-6 text-info mb-3">
+                            <i class="fas fa-number-2"></i>
+                        </div>
+                        <h5 class="fw-bold">Enter Violation Details</h5>
+                        <p class="text-muted small">Provide vehicle information and violation details for analysis</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="display-6 text-success mb-3">
+                            <i class="fas fa-number-3"></i>
+                        </div>
+                        <h5 class="fw-bold">Get Expert Analysis</h5>
+                        <p class="text-muted small">Receive instant guidance on applicable laws and fine amounts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <div class="display-6 text-warning mb-3">
+                            <i class="fas fa-number-4"></i>
+                        </div>
+                        <h5 class="fw-bold">Track & Appeal</h5>
+                        <p class="text-muted small">View history, track fines, and file appeals if needed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-lg-6 mx-auto">
+        <div class="card border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body p-5 text-center">
+                <h4 class="fw-bold mb-3">Ready to Get Started?</h4>
+                <p class="lead mb-4">Join thousands of drivers and officers using our traffic law expert system</p>
+                {% if not session.user_id %}
+                    <a href="/register" class="btn btn-light btn-lg fw-bold">
+                        <i class="fas fa-arrow-right"></i> Create Your Account
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
